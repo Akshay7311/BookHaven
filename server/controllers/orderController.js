@@ -1,4 +1,5 @@
 import { sequelize, Order, OrderItem, CartItem, Book, Coupon } from '../models/index.js';
+import { sendEmail, generateOrderConfirmationHTML, generateStatusUpdateHTML } from '../utils/emailService.js';
 import { Op } from 'sequelize';
 
 // @desc    Create new order (Transaction-Based Isolation)
@@ -96,21 +97,27 @@ export const createOrder = async (req, res) => {
     // Phase 7: Commit full transaction
     await t.commit();
 
-    // Simulated Email Notification (Simulation Mode)
-    console.log(`
-      --------------------------------------------------
-      [EMAIL SERVICE SIMULATION]
-      To: ${req.user.email}
-      Subject: Order Confirmation - BookHaven #${newOrder.id.slice(0, 8)}
+    // After order creation, send confirmation email
+    try {
+      const orderDataForEmail = {
+        id: newOrder.id,
+        user_name: req.user?.name || 'Customer',
+        user_email: req.user?.email || 'Customer',
+        total_amount: newOrder.totalAmount,
+        shippingAddress: shippingAddress,
+        paymentMethod: newOrder.paymentMethod,
+        items: orderItemsPayload.map(item => ({
+          title: cartItems.find(ci => ci.bookId === item.bookId)?.Book?.title || 'Unknown Book',
+          quantity: item.quantity,
+          price: item.price
+        }))
+      };
       
-      Hello ${req.user.name},
-      Your order of ${cartItems.length} items has been placed successfully.
-      Total Paid: ₹${(calculatedTotal + (Number(shippingPrice) || 0)).toFixed(2)}
-      Payment Method: ${paymentMethod}
-      
-      Track your order here: http://localhost:5173/profile/orders
-      --------------------------------------------------
-    `);
+      const emailHtml = generateOrderConfirmationHTML(orderDataForEmail);
+      sendEmail(req.user?.email, 'Order Confirmation - BookHaven', emailHtml);
+    } catch (emailError) {
+      console.error('[Email Integration Error] Proceeding anyway:', emailError);
+    }
 
     res.status(201).json({ message: 'Order placed successfully', orderId: newOrder.id });
 
@@ -224,6 +231,26 @@ export const updateOrderStatus = async (req, res) => {
     order.updatedBy = req.user.id;
 
     await order.save();
+
+    // Send Status Update Email if relevant
+    if (['shipped', 'delivered', 'cancelled'].includes(status)) {
+      try {
+        // Fetch fresh order with user info for email
+        const fullOrder = await Order.findByPk(order.id, {
+          include: [{ association: 'User', attributes: ['name', 'email'] }]
+        });
+        
+        if (fullOrder && fullOrder.User) {
+          const emailHtml = generateStatusUpdateHTML({
+            id: fullOrder.id,
+            user_name: fullOrder.User.name
+          }, status);
+          sendEmail(fullOrder.User.email, `BookHaven Order Status: ${status.toUpperCase()}`, emailHtml);
+        }
+      } catch (emailError) {
+        console.error('[Email Status Update Error]:', emailError);
+      }
+    }
     
     res.json({ message: 'Order status updated successfully', order });
   } catch (error) {
