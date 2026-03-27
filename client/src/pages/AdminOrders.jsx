@@ -12,7 +12,9 @@ import {
   Package,
   CheckCircle2,
   Clock,
-  AlertCircle
+  AlertCircle,
+  MapPin,
+  User as UserIcon
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -136,7 +138,7 @@ const AdminOrders = () => {
                             <span className="font-mono text-sm font-bold text-gray-400">Order</span>
                             <span className="font-bold text-gray-900">#{order.id.slice(0, 8)}...</span>
                         </div>
-                        <div className="text-sm font-medium text-gray-500">{order.user_name} ({order.user_email})</div>
+                        <div className="text-sm font-medium text-gray-500">{order.user_name || 'Anonymous'} ({order.user_email || 'No Email'})</div>
                     </div>
                 </div>
 
@@ -247,19 +249,30 @@ const AdminOrders = () => {
                         </div>
 
                         {order.shippingAddress && (
-                            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                                    <MapPin size={14} /> Shipping Destination
+                            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-16 h-16 bg-primary-50 -mr-8 -mt-8 rounded-full z-0 opacity-50" />
+                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2 relative z-10">
+                                    <MapPin size={14} className="text-primary-500" /> Shipping Destination
                                 </h3>
-                                <div className="space-y-1 text-sm font-medium">
+                                <div className="space-y-1 text-sm font-medium relative z-10">
                                     <p className="font-bold text-gray-900 text-base">{order.shippingAddress.fullName}</p>
                                     <p className="text-gray-500">{order.shippingAddress.street}</p>
                                     <p className="text-gray-500">{order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.zipCode}</p>
-                                    <p className="text-primary-600 pt-2 font-bold">{order.shippingAddress.phone}</p>
+                                    <p className="text-primary-600 pt-2 font-bold flex items-center gap-2">
+                                        <div className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-pulse" />
+                                        {order.shippingAddress.phone}
+                                    </p>
                                 </div>
-                                <div className="mt-4 pt-4 border-t border-gray-50 flex justify-between items-center text-[10px] font-bold uppercase tracking-tighter">
-                                    <span className="text-gray-400">Payment Method</span>
-                                    <span className="text-gray-900 bg-gray-100 px-2 py-1 rounded">{order.paymentMethod}</span>
+                                
+                                <div className="mt-6 pt-6 border-t border-gray-50 space-y-3 relative z-10">
+                                    <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
+                                        <span className="text-gray-400 flex items-center gap-1"><UserIcon size={10} /> Consumer ID</span>
+                                        <span className="text-gray-600 font-mono bg-gray-50 px-2 py-0.5 rounded border border-gray-100">{order.userId ? `#${order.userId.slice(0, 8)}` : 'GUEST'}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
+                                        <span className="text-gray-400">Payment Method</span>
+                                        <span className="text-primary-700 bg-primary-50 px-2 py-0.5 rounded border border-primary-100">{order.paymentMethod}</span>
+                                    </div>
                                 </div>
                             </div>
                         )}

@@ -95,6 +95,23 @@ export const createOrder = async (req, res) => {
 
     // Phase 7: Commit full transaction
     await t.commit();
+
+    // Simulated Email Notification (Simulation Mode)
+    console.log(`
+      --------------------------------------------------
+      [EMAIL SERVICE SIMULATION]
+      To: ${req.user.email}
+      Subject: Order Confirmation - BookHaven #${newOrder.id.slice(0, 8)}
+      
+      Hello ${req.user.name},
+      Your order of ${cartItems.length} items has been placed successfully.
+      Total Paid: ₹${(calculatedTotal + (Number(shippingPrice) || 0)).toFixed(2)}
+      Payment Method: ${paymentMethod}
+      
+      Track your order here: http://localhost:5173/profile/orders
+      --------------------------------------------------
+    `);
+
     res.status(201).json({ message: 'Order placed successfully', orderId: newOrder.id });
 
   } catch (error) {
@@ -160,11 +177,12 @@ export const getOrders = async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
     
-    // Map to frontend expectation
+    // Map to frontend expectation with safety checks
     const formatted = orders.map(order => ({
       id: order.id,
-      user_name: order.User.name,
-      user_email: order.User.email,
+      userId: order.userId, // Added for admin reference
+      user_name: order.User?.name || 'Deleted User',
+      user_email: order.User?.email || 'N/A',
       total_amount: order.totalAmount,
       status: order.status,
       paymentStatus: order.paymentStatus,
@@ -211,5 +229,44 @@ export const updateOrderStatus = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server Error' });
+  }
+};
+// @desc    Get admin dashboard statistics
+// @route   GET /api/orders/stats
+// @access  Private/Admin
+export const getAdminStats = async (req, res) => {
+  try {
+    const totalOrders = await Order.count();
+    const totalRevenue = await Order.sum('totalAmount', {
+      where: { status: { [Op.ne]: 'cancelled' } }
+    });
+    const pendingOrders = await Order.count({ where: { status: 'pending' } });
+    
+    // Low stock items (stock < 5)
+    const lowStockBooks = await Book.count({
+      where: { stock: { [Op.lt]: 5 } }
+    });
+
+    const recentOrders = await Order.findAll({
+      limit: 5,
+      order: [['createdAt', 'DESC']],
+      include: [{ association: 'User', attributes: ['name'] }]
+    });
+
+    res.json({
+      totalOrders,
+      totalRevenue: Number(totalRevenue) || 0,
+      pendingOrders,
+      lowStockBooks,
+      recentOrders: recentOrders.map(o => ({
+        id: o.id,
+        user: o.User?.name || 'Guest',
+        amount: o.totalAmount,
+        date: o.createdAt
+      }))
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error fetching stats' });
   }
 };
