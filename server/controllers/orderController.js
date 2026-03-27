@@ -118,6 +118,8 @@ export const getMyOrders = async (req, res) => {
         id: order.id,
         total_amount: order.totalAmount,
         status: order.status,
+        trackingNumber: order.trackingNumber,
+        carrierName: order.carrierName,
         created_at: order.createdAt,
         items: order.OrderItems.map(item => ({
             book_id: item.bookId,
@@ -153,9 +155,18 @@ export const getOrders = async (req, res) => {
     const formatted = orders.map(order => ({
       id: order.id,
       user_name: order.User.name,
+      user_email: order.User.email,
       total_amount: order.totalAmount,
       status: order.status,
-      created_at: order.createdAt
+      trackingNumber: order.trackingNumber,
+      carrierName: order.carrierName,
+      created_at: order.createdAt,
+      items: order.OrderItems.map(item => ({
+        id: item.id,
+        title: item.Book?.title || 'Unknown',
+        price: item.price,
+        quantity: item.quantity
+      }))
     }));
     
     res.json(formatted);
