@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import OrderTracking from '../components/OrderTracking';
-import { Package, Calendar, CreditCard, ChevronRight, ShoppingBag } from 'lucide-react';
+import { Package, Calendar, CreditCard, ChevronRight, ShoppingBag, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const OrderHistory = () => {
@@ -66,8 +66,8 @@ const OrderHistory = () => {
         </div>
       ) : (
         <div className="space-y-10">
-          {orders.map((order) => (
-            <div key={order.id} className="group bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-500">
+          {orders.map((order, oIndex) => (
+            <div key={order.id || oIndex} className="group bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-500">
               {/* Header */}
               <div className="p-8 bg-gray-50/50 border-b border-gray-100 grid grid-cols-2 md:grid-cols-4 gap-8">
                 <div>
@@ -116,28 +116,52 @@ const OrderHistory = () => {
               </div>
 
               {/* Items List */}
-              <div className="p-8 bg-white">
-                <h4 className="text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-6">Shipment Details</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {order.items?.map((item) => (
-                    <div key={item.id} className="flex items-center gap-6 p-4 rounded-2xl border border-gray-50 hover:border-gray-200 hover:bg-gray-50/30 transition-all group-item">
-                        <div className="w-20 h-28 bg-gray-100 rounded-xl overflow-hidden shadow-sm flex-shrink-0 group-item-hover:scale-105 transition-transform duration-300">
-                        {item.image_url ? (
-                            <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-400 font-bold bg-gray-100 uppercase p-2 text-center">No Cover</div>
-                        )}
-                        </div>
-                        <div className="flex-grow">
-                            <h3 className="font-extrabold text-gray-900 text-lg mb-1">{item.title}</h3>
-                            <p className="text-sm font-medium text-gray-500 mb-3">{item.author}</p>
-                            <div className="flex justify-between items-center bg-white p-2 rounded-lg border border-gray-100">
-                                <span className="text-xs font-bold text-gray-400 uppercase tracking-tighter">Qty: {item.quantity}</span>
-                                <span className="font-bold text-primary-600">₹ {Number(item.price).toFixed(2)}</span>
+              <div className="p-8 bg-white border-b border-gray-50">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                  <div>
+                    <h4 className="text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-4">Shipment Items</h4>
+                    <div className="space-y-4">
+                        {order.items?.map((item, iIndex) => (
+                        <div key={item.id || iIndex} className="flex items-center gap-4 p-3 rounded-xl border border-gray-50 bg-gray-50/20">
+                            <div className="w-12 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                                {item.image_url ? <img src={item.image_url} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[8px] text-gray-400">No Img</div>}
+                            </div>
+                            <div className="flex-grow min-w-0">
+                                <p className="font-bold text-gray-900 text-sm truncate">{item.title}</p>
+                                <p className="text-xs text-gray-400 font-medium">Qty: {item.quantity} • ₹{item.price}</p>
                             </div>
                         </div>
+                        ))}
                     </div>
-                    ))}
+                  </div>
+                  
+                  {/* Delivery Info */}
+                  <div className="space-y-6">
+                    {order.shippingAddress && (
+                      <div>
+                        <h4 className="text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-3 flex items-center gap-2">
+                           <MapPin size={12} /> Delivery Address
+                        </h4>
+                        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm text-sm">
+                          <p className="font-bold text-gray-800">{order.shippingAddress.fullName}</p>
+                          <p className="text-gray-500 mt-1">
+                            {order.shippingAddress.street}, {order.shippingAddress.city}<br />
+                            {order.shippingAddress.state} - {order.shippingAddress.zipCode}
+                          </p>
+                          <p className="text-xs font-bold text-gray-400 mt-3">{order.shippingAddress.phone}</p>
+                        </div>
+                      </div>
+                    )}
+                    <div>
+                      <h4 className="text-[10px] uppercase font-bold text-gray-400 tracking-widest mb-3 flex items-center gap-2">
+                         <CreditCard size={12} /> Payment Method
+                      </h4>
+                      <p className="font-bold text-gray-800 flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg w-fit">
+                        {order.paymentMethod === 'Card' ? 'Credit / Debit Card' : order.paymentMethod}
+                        <span className="text-[10px] text-emerald-500 font-black tracking-tighter uppercase px-1.5 py-0.5 bg-emerald-50 rounded border border-emerald-100">Secured</span>
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
               

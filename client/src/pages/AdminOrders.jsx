@@ -225,24 +225,44 @@ const AdminOrders = () => {
                         </div>
                     </div>
 
-                    {/* Right: Order Items */}
-                    <div className="bg-gray-50/50 rounded-2xl p-6 border border-gray-100">
-                        <h3 className="text-sm font-extrabold text-gray-900 mb-4 flex items-center gap-2">
-                            <Eye size={18} /> Ordered Content
-                        </h3>
-                        <div className="space-y-3">
-                            {order.items?.map(item => (
-                                <div key={item.id} className="flex justify-between items-center p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center text-primary-600 font-bold">
-                                            {item.quantity}x
+                    {/* Right: Order Content & Delivery */}
+                    <div className="space-y-6">
+                        <div className="bg-gray-50/50 rounded-2xl p-6 border border-gray-100">
+                            <h3 className="text-sm font-extrabold text-gray-900 mb-4 flex items-center gap-2">
+                                <Eye size={18} /> Ordered Content
+                            </h3>
+                            <div className="space-y-3">
+                                {order.items?.map(item => (
+                                    <div key={item.id} className="flex justify-between items-center p-3 bg-white rounded-xl border border-gray-100 shadow-sm">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center text-primary-600 font-bold">
+                                                {item.quantity}x
+                                            </div>
+                                            <span className="font-bold text-gray-800 text-sm truncate max-w-[180px]">{item.title}</span>
                                         </div>
-                                        <span className="font-bold text-gray-800 text-sm truncate max-w-[180px]">{item.title}</span>
+                                        <div className="font-bold text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</div>
                                     </div>
-                                    <div className="font-bold text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
+
+                        {order.shippingAddress && (
+                            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <MapPin size={14} /> Shipping Destination
+                                </h3>
+                                <div className="space-y-1 text-sm font-medium">
+                                    <p className="font-bold text-gray-900 text-base">{order.shippingAddress.fullName}</p>
+                                    <p className="text-gray-500">{order.shippingAddress.street}</p>
+                                    <p className="text-gray-500">{order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.zipCode}</p>
+                                    <p className="text-primary-600 pt-2 font-bold">{order.shippingAddress.phone}</p>
+                                </div>
+                                <div className="mt-4 pt-4 border-t border-gray-50 flex justify-between items-center text-[10px] font-bold uppercase tracking-tighter">
+                                    <span className="text-gray-400">Payment Method</span>
+                                    <span className="text-gray-900 bg-gray-100 px-2 py-1 rounded">{order.paymentMethod}</span>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
               </div>

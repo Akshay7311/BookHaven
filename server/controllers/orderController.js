@@ -55,12 +55,17 @@ export const createOrder = async (req, res) => {
       calculatedTotal -= discount;
     }
 
+    const { shippingAddress, paymentMethod, shippingPrice } = req.body;
+
     // Phase 3: Create Order wrapper
     const newOrder = await Order.create({
       userId: req.user.id,
-      totalAmount: calculatedTotal,
+      totalAmount: calculatedTotal + (Number(shippingPrice) || 0),
       status: 'pending',
-      paymentStatus: 'unpaid'
+      paymentStatus: paymentMethod === 'COD' ? 'unpaid' : 'paid', // Simulate auto-pay for Card/PayPal
+      shippingAddress: JSON.stringify(shippingAddress),
+      paymentMethod: paymentMethod || 'COD',
+      shippingPrice: Number(shippingPrice) || 0
     }, { transaction: t });
 
     const orderItemsPayload = [];
@@ -118,6 +123,10 @@ export const getMyOrders = async (req, res) => {
         id: order.id,
         total_amount: order.totalAmount,
         status: order.status,
+        paymentStatus: order.paymentStatus,
+        paymentMethod: order.paymentMethod,
+        shippingAddress: order.shippingAddress ? JSON.parse(order.shippingAddress) : null,
+        shippingPrice: order.shippingPrice,
         trackingNumber: order.trackingNumber,
         carrierName: order.carrierName,
         created_at: order.createdAt,
@@ -158,6 +167,10 @@ export const getOrders = async (req, res) => {
       user_email: order.User.email,
       total_amount: order.totalAmount,
       status: order.status,
+      paymentStatus: order.paymentStatus,
+      paymentMethod: order.paymentMethod,
+      shippingAddress: order.shippingAddress ? JSON.parse(order.shippingAddress) : null,
+      shippingPrice: order.shippingPrice,
       trackingNumber: order.trackingNumber,
       carrierName: order.carrierName,
       created_at: order.createdAt,

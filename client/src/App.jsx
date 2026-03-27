@@ -16,6 +16,7 @@ import Register from './pages/Register';
 import BookDetails from './pages/BookDetails';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
+import OrderSuccess from './pages/OrderSuccess';
 import OrderHistory from './pages/OrderHistory';
 import ProfileLayout from './pages/ProfileLayout';
 import ProfileSettings from './pages/ProfileSettings';
@@ -66,6 +67,7 @@ function App() {
               <Route element={<ProtectedRoute />}>
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/checkout" element={<Checkout />} />
+                <Route path="/order-success" element={<OrderSuccess />} />
                 
                 {/* Unified Profile Layout */}
                 <Route path="/profile" element={<ProfileLayout />}>

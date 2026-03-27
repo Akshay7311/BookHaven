@@ -27,6 +27,22 @@ const Order = sequelize.define('Order', {
     type: DataTypes.ENUM('unpaid', 'paid', 'refunded'),
     defaultValue: 'unpaid'
   },
+  shippingAddress: {
+    type: DataTypes.TEXT, // Stringified JSON: { fullName, address, city, zip, phone }
+    allowNull: true
+  },
+  paymentMethod: {
+    type: DataTypes.ENUM('COD', 'Card', 'PayPal'),
+    defaultValue: 'COD'
+  },
+  paymentResult: {
+    type: DataTypes.TEXT, // For storing transaction IDs or status from gateway
+    allowNull: true
+  },
+  shippingPrice: {
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 0.00
+  },
   trackingNumber: {
     type: DataTypes.STRING,
     allowNull: true
