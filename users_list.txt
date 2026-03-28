@@ -4,20 +4,17 @@ Name:   Store Admin
 Email:  admin@bookhaven.com
 Password: bookhaven123
 Role:   ADMIN
-Joined: 28/2/2026
-ID:     31d99eb9-2c2a-41f5-bd69-30e95ef14458
-----------------------------------------
-Name:   Test User
-Email:  user@example.com
-Password: bookhaven123
-Role:   USER
-Joined: 28/2/2026
-ID:     6940b423-6181-4a11-b13c-8b80fdd5c679
+ID:     b38df5a9-1415-4ce6-bc12-3dd53e243255
 ----------------------------------------
 Name:   Store Owner
 Email:  owner@bookhaven.com
 Password: bookhaven123
 Role:   ADMIN
-Joined: 28/2/2026
-ID:     f5640426-33d2-451a-aaff-868388cfa9be
+ID:     e8c1f428-8f13-4f09-9903-9aa0cf545147
+----------------------------------------
+Name:   Ethereal Tester
+Email:  javewe6de3oidv6q@ethereal.email
+Password: password123
+Role:   USER (Consumer)
+ID:     41ce46d6-9d56-4663-ab45-dd58a88c08f6
 ----------------------------------------
