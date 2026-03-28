@@ -27,7 +27,19 @@ const Shop = () => {
   const [priceRange, setPriceRange] = useState(5000);
   const [inStockOnly, setInStockOnly] = useState(false);
 
-  const categories = ["Web Novel", "Comics", "Fiction", "Non-fiction", "Science", "History", "Manga", "Light Novel"];
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data } = await api.get('/categories');
+        setCategories(data);
+      } catch (err) {
+        console.error('Error fetching categories:', err);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -52,7 +64,7 @@ const Shop = () => {
         setError(null);
         // We aren't fully passing advanced mock filters to API since backend doesn't support them all, 
         // but we will apply the ones it does and filter the rest locally for the demonstration.
-        const { data } = await api.get(`/books?keyword=${debouncedKeyword}&category=${category}&limit=50`);
+        const { data } = await api.get(`/books?keyword=${debouncedKeyword}&category=${category}&limit=200`);
         
         // Local secondary filtering & sorting mock to fulfill UI requirements
         let results = data.books || [];
@@ -95,7 +107,7 @@ const Shop = () => {
          <div>
             <h1 className="text-2xl font-extrabold text-gray-900 flex items-center gap-2">
             <BookOpen className="text-primary-500" size={24} />
-            {category ? `${category} Collection` : (debouncedKeyword ? `Search: "${debouncedKeyword}"` : 'All Books')}
+            {category ? `${categories.find(c => c.id === category)?.name || 'Filtered'} Collection` : (debouncedKeyword ? `Search: "${debouncedKeyword}"` : 'All Books')}
             </h1>
             <p className="text-sm text-gray-500 mt-1">Showing {books.length} results</p>
          </div>
@@ -152,12 +164,12 @@ const Shop = () => {
                     </button>
                 </li>
                 {categories.map(cat => (
-                    <li key={cat}>
+                    <li key={cat.id}>
                     <button 
-                        onClick={() => setCategory(cat)}
-                        className={`w-full text-left px-3 py-1.5 rounded-md text-sm transition-colors ${category === cat ? 'bg-primary-50 text-primary-700 font-bold border-l-4 border-primary-500' : 'text-gray-600 hover:bg-gray-50 font-medium border-l-4 border-transparent'}`}
+                        onClick={() => setCategory(cat.id)}
+                        className={`w-full text-left px-3 py-1.5 rounded-md text-sm transition-colors ${category === cat.id ? 'bg-primary-50 text-primary-700 font-bold border-l-4 border-primary-500' : 'text-gray-600 hover:bg-gray-50 font-medium border-l-4 border-transparent'}`}
                     >
-                        {cat}
+                        {cat.name}
                     </button>
                     </li>
                 ))}

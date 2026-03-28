@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/index.js';
+import { sendEmail } from '../utils/emailService.js';
 
 export const registerUser = async (req, res) => {
   try {
@@ -24,6 +25,25 @@ export const registerUser = async (req, res) => {
       password: hashedPassword,
       role
     });
+
+    // Send Welcome Email
+    try {
+      await sendEmail(
+        user.email,
+        'Welcome to BookHaven!',
+        `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 10px; padding: 20px;">
+          <h1 style="color: #1a1a1a; text-align: center;">Welcome to BookHaven, ${user.name}!</h1>
+          <p>We're thrilled to have you join our community of book lovers.</p>
+          <p>You can now browse our extensive collection, create a wishlist, and place orders for your favorite books.</p>
+          <div style="text-align: center; margin-top: 30px;">
+            <a href="${process.env.CLIENT_URL}" style="background: #1a1a1a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Start Browsing</a>
+          </div>
+          <p style="margin-top: 40px; font-size: 12px; color: #666; text-align: center;">© 2026 BookHaven Bookstore. All rights reserved.</p>
+        </div>`
+      );
+    } catch (emailError) {
+      console.error('[Welcome Email Error]:', emailError);
+    }
 
     res.status(201).json({
       _id: user.id, // return UUID mapped to _id for frontend compat

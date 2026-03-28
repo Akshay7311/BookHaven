@@ -22,15 +22,11 @@ const BookDetails = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Mocking multiple images for the gallery since backend only holds one `image_url` currently
-  // In a real scenario we'd query the associated `BookImages` table mapping
-  const galleryImages = book?.image_url 
-    ? [
-        book.image_url, 
-        book.image_url.includes('unsplash') ? book.image_url.replace('w=600', 'w=600&greyscale') : book.image_url, 
-        'https://images.unsplash.com/photo-1544947950-fa07a98d237f?q=80&w=400&auto=format&fit=crop'
-      ]
-    : [];
+  // Real gallery images from backend associations
+  const galleryImages = [
+    book?.image_url, 
+    ...(book?.images ? book.images.map(img => img.url) : [])
+  ].filter(Boolean);
 
   useEffect(() => {
     const fetchBookAndRelated = async () => {

@@ -11,8 +11,13 @@ router.get('/', getBooks);
 router.get('/:id', getBookById);
 
 // Admin exclusive actions with Multer Image Parsing and Zod Validation
-router.post('/', protect, admin, upload.single('image'), validate(bookSchema), createBook);
-router.put('/:id', protect, admin, upload.single('image'), validate(bookSchema), updateBook);
+const uploadFields = upload.fields([
+    { name: 'coverImage', maxCount: 1 },
+    { name: 'images', maxCount: 4 }
+]);
+
+router.post('/', protect, admin, uploadFields, validate(bookSchema), createBook);
+router.put('/:id', protect, admin, uploadFields, validate(bookSchema), updateBook);
 router.delete('/:id', protect, admin, deleteBook);
 
 export default router;

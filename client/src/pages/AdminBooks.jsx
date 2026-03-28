@@ -14,7 +14,7 @@ const AdminDashboard = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const { data: bData } = await api.get('/books?limit=100');
+      const { data: bData } = await api.get('/books?limit=200');
       setBooks(bData.books || []);
     } catch (error) {
       console.error('Error fetching admin data', error);

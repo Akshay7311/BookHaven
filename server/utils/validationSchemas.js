@@ -16,7 +16,7 @@ export const bookSchema = z.object({
   author: z.string().min(1, 'Author is required').max(255),
   description: z.string().min(10, 'Description must be at least 10 characters'),
   price: z.coerce.number().positive('Price must be a positive number'),
-  categoryId: z.string().uuid('Invalid category ID').nullable().optional(),
+  categoryId: z.string().uuid('Invalid category ID').or(z.literal('')).transform(val => val === '' ? null : val).nullable().optional(),
   stock: z.coerce.number().int().nonnegative('Stock cannot be negative'),
 });
 
