@@ -1,0 +1,35 @@
+[
+  {
+    "id": "41ce46d6-9d56-4663-ab45-dd58a88c08f6",
+    "name": "Ethereal Tester",
+    "email": "javewe6de3oidv6q@ethereal.email",
+    "password": "$2b$10$bv3OLUmlZ6RAhsCrI4RQ3uqoKo3I678iCdfE62q0aer1DsPwxdDg6",
+    "role": "user",
+    "avatar": null,
+    "isActive": true,
+    "createdAt": "2026-03-28T05:31:45.000Z",
+    "updatedAt": "2026-03-28T05:31:45.000Z"
+  },
+  {
+    "id": "b38df5a9-1415-4ce6-bc12-3dd53e243255",
+    "name": "Store Admin",
+    "email": "admin@bookhaven.com",
+    "password": "$2b$10$ferUhFGth87D5wWx.IZYWuePEWrJj/MWYChz8lkEv/eP9K6Xv.NtO",
+    "role": "admin",
+    "avatar": null,
+    "isActive": true,
+    "createdAt": "2026-03-28T05:37:37.000Z",
+    "updatedAt": "2026-03-28T05:37:37.000Z"
+  },
+  {
+    "id": "e8c1f428-8f13-4f09-9903-9aa0cf545147",
+    "name": "Store Owner",
+    "email": "owner@bookhaven.com",
+    "password": "$2b$10$ferUhFGth87D5wWx.IZYWuePEWrJj/MWYChz8lkEv/eP9K6Xv.NtO",
+    "role": "admin",
+    "avatar": null,
+    "isActive": true,
+    "createdAt": "2026-03-28T05:37:37.000Z",
+    "updatedAt": "2026-03-28T05:37:37.000Z"
+  }
+]

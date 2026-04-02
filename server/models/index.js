@@ -11,6 +11,7 @@ import Banner from './Banner.js';
 import ContactMessage from './ContactMessage.js';
 import Wishlist from './Wishlist.js';
 import AuditLog from './AuditLog.js';
+import Review from './Review.js';
 
 // Relations
 
@@ -57,6 +58,13 @@ OrderItem.belongsTo(Order, { foreignKey: 'orderId' });
 Book.hasMany(OrderItem, { foreignKey: 'bookId' });
 OrderItem.belongsTo(Book, { foreignKey: 'bookId' });
 
+// Review Associations
+User.hasMany(Review, { foreignKey: 'userId', onDelete: 'CASCADE' });
+Review.belongsTo(User, { foreignKey: 'userId' });
+
+Book.hasMany(Review, { foreignKey: 'bookId', as: 'reviews', onDelete: 'CASCADE' });
+Review.belongsTo(Book, { foreignKey: 'bookId' });
+
 export {
   sequelize,
   User,
@@ -70,5 +78,6 @@ export {
   Banner,
   ContactMessage,
   Wishlist,
-  AuditLog
+  AuditLog,
+  Review
 };

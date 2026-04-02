@@ -25,8 +25,13 @@ const BookDetails = () => {
   // Real gallery images from backend associations
   const galleryImages = [
     book?.image_url, 
-    ...(book?.images ? book.images.map(img => img.url) : [])
+    ...(book?.images ? book.images.map(img => img.imageUrl) : [])
   ].filter(Boolean);
+
+  const [reviews, setReviews] = useState([]);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     const fetchBookAndRelated = async () => {
@@ -35,6 +40,7 @@ const BookDetails = () => {
         const { data } = await api.get(`/books/${id}`);
         setBook(data);
         setError(null);
+        setReviews(data.reviews || []);
 
         // Fetch related books from same category
         if (data.category) {
@@ -78,6 +84,29 @@ const BookDetails = () => {
       } catch (err) {
           notify.error('Failed to update wishlist');
       }
+  };
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!user) return navigate('/login');
+    if (!reviewComment) return notify.error('Please add a comment');
+
+    try {
+      setSubmittingReview(true);
+      const { data } = await api.post('/api/reviews', {
+        bookId: id,
+        rating: reviewRating,
+        comment: reviewComment
+      });
+      notify.success('Review submitted!');
+      setReviews([data.review, ...reviews]);
+      setReviewComment('');
+      setReviewRating(5);
+    } catch (err) {
+      notify.error(err.response?.data?.message || 'Failed to submit review');
+    } finally {
+      setSubmittingReview(false);
+    }
   };
 
   if (loading) return <div className="min-h-screen pt-20"><LoadingSpinner /></div>;
@@ -181,12 +210,12 @@ const BookDetails = () => {
                         <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-100">
                             <div className="flex items-center">
                                 {[1,2,3,4,5].map(star => (
-                                    <Star key={star} size={18} className={star <= 4 ? "text-yellow-400 fill-current" : "text-gray-300"} />
+                                    <Star key={star} size={18} className={star <= (book.rating || 0) ? "text-yellow-400 fill-current" : "text-gray-300"} />
                                 ))}
-                                <span className="text-sm font-bold text-gray-700 ml-2">4.0</span>
+                                <span className="text-sm font-bold text-gray-700 ml-2">{book.rating || '0.0'}</span>
                             </div>
                             <span className="text-gray-300">|</span>
-                            <span className="text-sm text-gray-500 hover:text-primary-600 cursor-pointer">128 Reviews</span>
+                            <span className="text-sm text-gray-500 hover:text-primary-600 cursor-pointer">{book.numReviews || 0} Reviews</span>
                         </div>
                         
                         {/* Price & Stock */}
@@ -278,7 +307,7 @@ const BookDetails = () => {
                        onClick={() => setActiveTab('reviews')}
                        className={`px-8 py-5 text-sm sm:text-base font-bold whitespace-nowrap flex items-center gap-2 transition-colors ${activeTab === 'reviews' ? 'text-primary-600 border-b-4 border-primary-500 bg-primary-50/50' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'}`}
                     >
-                        <MessageSquare size={18} /> Customer Reviews (128)
+                        <MessageSquare size={18} /> Customer Reviews ({book.numReviews || 0})
                     </button>
                     <button 
                        onClick={() => setActiveTab('shipping')}
@@ -301,36 +330,85 @@ const BookDetails = () => {
                         <div className="max-w-4xl">
                             <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center justify-between">
                                 Customer Ratings
-                                <button className="text-sm bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors">Write a Review</button>
                             </h3>
-                            {/* Mock Review */}
-                            <div className="border border-gray-100 bg-gray-50 rounded-xl p-6 mb-4 relative">
-                                <span className="absolute top-4 right-4 text-xs text-gray-400">2 days ago</span>
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className="w-10 h-10 bg-primary-200 rounded-full flex items-center justify-center font-bold text-primary-700">A</div>
-                                    <div>
-                                        <p className="font-bold text-gray-900 text-sm">Akshay J.</p>
-                                        <div className="flex text-yellow-400">
-                                            {[...Array(5)].map((_, i) => <Star key={i} size={12} className="fill-current" />)}
+
+                            {/* Review Form */}
+                            {user ? (
+                                <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 mb-8">
+                                    <h4 className="font-bold text-gray-900 mb-4">Write a Review</h4>
+                                    <form onSubmit={handleReviewSubmit}>
+                                        <div className="mb-4">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
+                                            <div className="flex gap-1">
+                                                {[1,2,3,4,5].map(star => (
+                                                    <button 
+                                                        key={star} 
+                                                        type="button"
+                                                        onClick={() => setReviewRating(star)}
+                                                        className="text-yellow-400 focus:outline-none"
+                                                    >
+                                                        <Star size={24} className={star <= reviewRating ? "fill-current" : "text-gray-300"} />
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                                <h4 className="font-bold text-gray-800 mb-1">Excellent Book! highly recommended</h4>
-                                <p className="text-gray-600 text-sm leading-relaxed">The quality of the binding is superb and the story is incredibly engaging. I finished it in one sitting. The checkout process on BookHaven was also incredibly smooth.</p>
-                            </div>
-                            <div className="border border-gray-100 bg-gray-50 rounded-xl p-6 relative opacity-70">
-                                <span className="absolute top-4 right-4 text-xs text-gray-400">1 week ago</span>
-                                <div className="flex items-center gap-3 mb-3">
-                                    <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center font-bold text-blue-700">R</div>
-                                    <div>
-                                        <p className="font-bold text-gray-900 text-sm">Rahul M.</p>
-                                        <div className="flex text-yellow-400">
-                                            {[...Array(4)].map((_, i) => <Star key={i} size={12} className="fill-current" />)}
-                                            <Star size={12} className="text-gray-300" />
+                                        <div className="mb-4">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Comment</label>
+                                            <textarea 
+                                                value={reviewComment}
+                                                onChange={(e) => setReviewComment(e.target.value)}
+                                                placeholder="Share your thoughts about this book..."
+                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                                                rows="3"
+                                            ></textarea>
                                         </div>
-                                    </div>
+                                        <button 
+                                            type="submit" 
+                                            disabled={submittingReview}
+                                            className="bg-primary-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-primary-700 transition disabled:opacity-50"
+                                        >
+                                            {submittingReview ? 'Submitting...' : 'Submit Review'}
+                                        </button>
+                                    </form>
                                 </div>
-                                <p className="text-gray-600 text-sm leading-relaxed">Good read, fast delivery.</p>
+                            ) : (
+                                <div className="bg-gray-50 border border-gray-100 rounded-xl p-6 mb-8 text-center text-gray-500">
+                                    Please <Link to="/login" className="text-primary-600 font-bold hover:underline">login</Link> to write a review.
+                                </div>
+                            )}
+
+                            {/* Reviews List */}
+                            <div className="space-y-4">
+                                {reviews.length > 0 ? (
+                                    reviews.slice(0, 5).map((review) => (
+                                        <div key={review.id} className="border border-gray-100 bg-gray-50 rounded-xl p-6 relative">
+                                            <span className="absolute top-4 right-4 text-xs text-gray-400">
+                                                {new Date(review.createdAt).toLocaleDateString()}
+                                            </span>
+                                            <div className="flex items-center gap-3 mb-3">
+                                                <div className="w-10 h-10 bg-primary-200 rounded-full flex items-center justify-center font-bold text-primary-700 uppercase">
+                                                    {review.userName.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-gray-900 text-sm">{review.userName}</p>
+                                                    <div className="flex text-yellow-400">
+                                                        {[...Array(5)].map((_, i) => (
+                                                            <Star key={i} size={12} className={i < review.rating ? "fill-current" : "text-gray-300"} />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <p className="text-gray-600 text-sm leading-relaxed">{review.comment}</p>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                        <p className="text-gray-500">No reviews yet. Be the first to review!</p>
+                                    </div>
+                                )}
+                                {reviews.length > 5 && (
+                                    <p className="text-center text-sm text-gray-400 mt-4 italic">Showing the 5 most recent reviews.</p>
+                                )}
                             </div>
                         </div>
                     )}

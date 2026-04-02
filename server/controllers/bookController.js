@@ -1,4 +1,4 @@
-import { Book, Category, BookImage } from '../models/index.js';
+import { Book, Category, BookImage, Review } from '../models/index.js';
 import { Op } from 'sequelize';
 import path from 'path';
 import fs from 'fs';
@@ -94,7 +94,8 @@ export const getBookById = async (req, res) => {
     const book = await Book.findByPk(req.params.id, {
         include: [
             { model: Category, as: 'category' },
-            { model: BookImage, as: 'images' }
+            { model: BookImage, as: 'images' },
+            { model: Review, as: 'reviews' }
         ]
     });
 
@@ -116,7 +117,12 @@ export const getBookById = async (req, res) => {
           id: img.id,
           imageUrl: img.imageUrl,
           isPrimary: img.isPrimary
-      })) : []
+      })) : [],
+      reviews: book.reviews || [],
+      rating: book.reviews && book.reviews.length > 0 
+        ? (book.reviews.reduce((acc, rev) => acc + rev.rating, 0) / book.reviews.length).toFixed(1)
+        : 4.0, // Keeping 4.0 as default if no reviews for aesthetic but based on data if exists
+      numReviews: book.reviews ? book.reviews.length : 0
     };
 
     res.json(mappedBook);

@@ -1,0 +1,47 @@
+{
+  "count": 7,
+  "users": [
+    {
+      "id": "57a76116-f36b-40d8-a2ed-7f5e2237167f",
+      "name": "Test User",
+      "email": "testuser@gmail.com",
+      "role": "user"
+    },
+    {
+      "id": "68049e05-6ab4-444b-9577-27478949b608",
+      "name": "Test Final",
+      "email": "test_final@example.com",
+      "role": "user"
+    },
+    {
+      "id": "848a4ba7-b7fb-44d9-a82b-c717320cdb09",
+      "name": "Akshay",
+      "email": "akshay@test.com",
+      "role": "user"
+    },
+    {
+      "id": "aac5f2f3-1b98-4f7a-b3a7-4fe51a955f6f",
+      "name": "Store Admin",
+      "email": "admin@bookhaven.com",
+      "role": "admin"
+    },
+    {
+      "id": "dbb134a4-9b84-43b6-a65c-3c7a144bf175",
+      "name": "Test User",
+      "email": "mail@test.com",
+      "role": "user"
+    },
+    {
+      "id": "e83cc583-31a8-4af1-af5e-532633b0146a",
+      "name": "Test User",
+      "email": "user@example.com",
+      "role": "user"
+    },
+    {
+      "id": "f2d351a2-a4c2-41de-bea8-28737e9485b7",
+      "name": "Store Owner",
+      "email": "owner@bookhaven.com",
+      "role": "admin"
+    }
+  ]
+}

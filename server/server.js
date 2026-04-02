@@ -17,6 +17,7 @@ import couponRoutes from './routes/couponRoutes.js';
 import bannerRoutes from './routes/bannerRoutes.js';
 import contactMessageRoutes from './routes/contactMessageRoutes.js';
 import wishlistRoutes from './routes/wishlistRoutes.js';
+import reviewRoutes from './routes/reviewRoutes.js';
 
 dotenv.config();
 
@@ -52,6 +53,7 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/banners', bannerRoutes);
 app.use('/api/contact', contactMessageRoutes);
 app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 app.get('/', (req, res) => {
     res.send('BookHaven API is running...');
@@ -81,8 +83,13 @@ const syncDb = async () => {
         
         // Use { alter: true } only for development syncing if changing schema often
         // Otherwise use sequelize-cli migrations
-        await sequelize.sync({ alter: true });
-        console.log('All models were synchronized successfully.');
+        if (process.env.NODE_ENV === 'development') {
+            await sequelize.sync({ alter: true });
+            console.log('All models were synchronized with alter:true.');
+        } else {
+            await sequelize.sync();
+            console.log('All models synced securely for production.');
+        }
     } catch (error) {
         console.error('Unable to connect to the database:', error);
     }
