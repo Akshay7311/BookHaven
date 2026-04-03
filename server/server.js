@@ -28,9 +28,20 @@ const app = express();
 app.use(helmet());
 app.use(morgan('common'));
 
-// Configured CORS
+// Configured CORS to allow both local development and live Vercel store
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://bookhaven-store-omega.vercel.app'
+];
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 
@@ -74,7 +85,7 @@ app.use((err, req, res, next) => {
     });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Force true will drop the table if it already exists, use alter: true in dev if changing models, or nothing in production
 const syncDb = async () => {
@@ -85,8 +96,13 @@ const syncDb = async () => {
         // Use { alter: true } only for development syncing if changing schema often
         // Otherwise use sequelize-cli migrations
         // Use { alter: true } to ensure your live Render DB gets the new color, subtitle, and is_system columns automatically
-        await sequelize.sync({ alter: true });
-        console.log('All models synchronized with alter:true (Production-Ready).');
+        try {
+            await sequelize.sync({ alter: true });
+            console.log('✅ Database Synchronized (alter:true).');
+        } catch (syncError) {
+            console.warn('⚠️ Sync with alter:true failed, falling back to basic sync:', syncError.message);
+            await sequelize.sync();
+        }
         
         // Seed system banners automatically if they don't exist
         await seedSystemBanners();
