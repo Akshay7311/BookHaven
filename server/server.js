@@ -18,6 +18,7 @@ import bannerRoutes from './routes/bannerRoutes.js';
 import contactMessageRoutes from './routes/contactMessageRoutes.js';
 import wishlistRoutes from './routes/wishlistRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
+import { seedSystemBanners } from './utils/seedHelper.js';
 
 dotenv.config();
 
@@ -83,13 +84,12 @@ const syncDb = async () => {
         
         // Use { alter: true } only for development syncing if changing schema often
         // Otherwise use sequelize-cli migrations
-        if (process.env.NODE_ENV === 'development') {
-            await sequelize.sync({ alter: true });
-            console.log('All models were synchronized with alter:true.');
-        } else {
-            await sequelize.sync();
-            console.log('All models synced securely for production.');
-        }
+        // Use { alter: true } to ensure your live Render DB gets the new color, subtitle, and is_system columns automatically
+        await sequelize.sync({ alter: true });
+        console.log('All models synchronized with alter:true (Production-Ready).');
+        
+        // Seed system banners automatically if they don't exist
+        await seedSystemBanners();
     } catch (error) {
         console.error('Unable to connect to the database:', error);
     }
