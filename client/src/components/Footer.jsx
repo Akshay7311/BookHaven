@@ -55,7 +55,6 @@ const Footer = () => {
 
         <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row items-center justify-between text-sm text-gray-500 gap-4">
            <p>&copy; {new Date().getFullYear()} BookHaven. All rights reserved.</p>
-           <p>Developer Name: Akshay Jadav</p>
         </div>
       </div>
     </footer>
