@@ -10,29 +10,8 @@ const Home = () => {
   const [newArrivals, setNewArrivals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
-  // Simulated Hero Banners (Would normally come from AdminBanners API, mocking for speed)
+  const [banners, setBanners] = useState([]);
   const [currentBanner, setCurrentBanner] = useState(0);
-  const banners = [
-    {
-        id: 1,
-        image_url: "https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=2000&auto=format&fit=crop",
-        title: "Summer Reading Festival",
-        subtitle: "Up to 50% Off Top Authors",
-        link_url: "/shop?category=Fiction",
-        color: "bg-blue-900",
-        btnColor: "bg-blue-500 hover:bg-blue-600"
-    },
-    {
-        id: 2,
-        image_url: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?q=80&w=2000&auto=format&fit=crop",
-        title: "Expand Your Tech Skills",
-        subtitle: "New Programming Books Arrived",
-        link_url: "/shop?category=Science",
-        color: "bg-slate-900",
-        btnColor: "bg-primary-500 hover:bg-primary-600"
-    }
-  ];
 
   useEffect(() => {
     const fetchHomeData = async () => {
@@ -45,6 +24,10 @@ const Home = () => {
         // Fetch newest (simulated by a small limit of recent)
         const newRes = await api.get(`/books?limit=5`); // Assuming backend will sort by created_at desc later
         setNewArrivals((newRes.data.books || []).reverse());
+
+        // Fetch Banners
+        const bannersRes = await api.get('/banners');
+        setBanners(bannersRes.data || []);
       } catch (err) {
         console.error('Error fetching home data:', err);
         setError('Failed to load store data. Please ensure backend is running.');
@@ -74,30 +57,48 @@ const Home = () => {
       
       {/* 1. Dynamic Hero Banner Slider */}
       <div className="w-full h-[300px] md:h-[450px] lg:h-[500px] relative overflow-hidden group">
-          {banners.map((b, idx) => (
-              <div 
-                 key={b.id} 
-                 className={`absolute inset-0 transition-opacity duration-1000 flex items-center ${idx === currentBanner ? 'opacity-100 z-10' : 'opacity-0 z-0'} ${b.color}`}
-              >
-                  <div className="absolute inset-0 bg-black/40 z-10"></div>
-                  <img src={b.image_url} alt={b.title} className="absolute inset-0 w-full h-full object-cover mix-blend-overlay" />
-                  
-                  <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full text-white pt-10">
-                      <span className="inline-block py-1 px-3 rounded text-sm font-bold tracking-wider uppercase mb-4 bg-white/20 backdrop-blur-sm border border-white/30">
-                          Featured Event
-                      </span>
-                      <h1 className="text-4xl md:text-6xl font-extrabold mb-4 leading-tight shadow-sm max-w-2xl">
-                          {b.title}
-                      </h1>
-                      <p className="text-lg md:text-2xl mb-8 max-w-xl text-gray-200 font-medium dropshadow-md">
-                          {b.subtitle}
-                      </p>
-                      <Link to={b.link_url} className={`inline-flex items-center gap-2 px-8 py-3.5 rounded font-bold text-white transition-colors text-lg ${b.btnColor}`}>
-                          Shop Now <ArrowRight size={20} />
-                      </Link>
-                  </div>
-              </div>
-          ))}
+           {banners.length > 0 ? (
+               banners.map((b, idx) => (
+                   <div 
+                      key={b.id} 
+                      className={`absolute inset-0 transition-opacity duration-1000 flex items-center ${idx === currentBanner ? 'opacity-100 z-10' : 'opacity-0 z-0'} ${b.color || 'bg-slate-900'}`}
+                   >
+                       <div className="absolute inset-0 bg-black/40 z-10"></div>
+                       <img src={b.image_url} alt={b.title} className="absolute inset-0 w-full h-full object-cover mix-blend-overlay" />
+                       
+                       <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full text-white pt-10 text-center md:text-left">
+                           <span className="inline-block py-1 px-3 rounded text-sm font-bold tracking-wider uppercase mb-4 bg-white/20 backdrop-blur-sm border border-white/30">
+                               Featured Highlight
+                           </span>
+                           <h1 className="text-4xl md:text-6xl font-extrabold mb-4 leading-tight shadow-sm max-w-2xl">
+                               {b.title || "Discover BookHaven"}
+                           </h1>
+                           <p className="text-lg md:text-2xl mb-8 max-w-xl text-gray-200 font-medium dropshadow-md">
+                               {b.subtitle || "Explore our vast collection and find your next favorite read."}
+                           </p>
+                           <Link to={b.link_url || "/shop"} className={`inline-flex items-center gap-2 px-8 py-3.5 rounded font-bold text-white transition-colors text-lg ${b.btnColor || 'bg-primary-600 hover:bg-primary-700'}`}>
+                               Shop Now <ArrowRight size={20} />
+                           </Link>
+                       </div>
+                   </div>
+               ))
+           ) : (
+               /* Fallback if no banners */
+               <div className="absolute inset-0 flex items-center bg-blue-900">
+                   <div className="absolute inset-0 bg-black/40 z-10"></div>
+                   <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full text-white pt-10">
+                       <h1 className="text-4xl md:text-6xl font-extrabold mb-4 leading-tight shadow-sm max-w-2xl">
+                           Welcome to BookHaven
+                       </h1>
+                       <p className="text-lg md:text-2xl mb-8 max-w-xl text-gray-200 font-medium dropshadow-md">
+                           Your ultimate destination for curated books and literature.
+                       </p>
+                       <Link to="/shop" className="inline-flex items-center gap-2 px-8 py-3.5 rounded font-bold text-white transition-colors text-lg bg-primary-600 hover:bg-primary-700">
+                           Start Browsing <ArrowRight size={20} />
+                       </Link>
+                   </div>
+               </div>
+           )}
 
           {/* Banner Controls */}
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex gap-2">

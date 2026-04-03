@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Pencil, Trash2, Plus, Tag } from 'lucide-react';
 import api from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
+import ConfirmModal from '../components/ConfirmModal';
 
 const AdminCategories = () => {
   const [categories, setCategories] = useState([]);
@@ -9,6 +10,8 @@ const AdminCategories = () => {
   const [formData, setFormData] = useState({ name: '', description: '' });
   const [editingId, setEditingId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
 
   const fetchCategories = async () => {
     try {
@@ -49,14 +52,18 @@ const AdminCategories = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Delete category? Associated books will have null categories.')) {
-      try {
-        await api.delete(`/categories/${id}`);
-        fetchCategories();
-      } catch (error) {
-        alert('Error deleting');
-      }
+  const handleDelete = (id) => {
+    setDeleteId(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    try {
+      await api.delete(`/categories/${deleteId}`);
+      fetchCategories();
+    } catch (error) {
+      alert('Error deleting');
     }
   };
 
@@ -119,6 +126,15 @@ const AdminCategories = () => {
            </div>
         </div>
       )}
+
+      <ConfirmModal 
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={confirmDelete}
+          title="Delete Category"
+          message="Are you sure you want to delete this category? Associated books will have their category set to null."
+          confirmText="Delete Category"
+       />
     </div>
   );
 };

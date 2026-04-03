@@ -2,10 +2,13 @@ import { useState, useEffect } from 'react';
 import { MailOpen, Trash2, Mail } from 'lucide-react';
 import api from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
+import ConfirmModal from '../components/ConfirmModal';
 
 const AdminMessages = () => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
 
   const fetchMessages = async () => {
     try {
@@ -30,14 +33,18 @@ const AdminMessages = () => {
      }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Delete message completely?')) {
-      try {
-        await api.delete(`/contact/${id}`);
-        fetchMessages();
-      } catch (error) {
-        alert('Error deleting');
-      }
+  const handleDelete = (id) => {
+    setDeleteId(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    try {
+      await api.delete(`/contact/${deleteId}`);
+      fetchMessages();
+    } catch (error) {
+      alert('Error deleting');
     }
   };
 
@@ -95,6 +102,15 @@ const AdminMessages = () => {
           </table>
         </div>
       )}
+
+      <ConfirmModal 
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={confirmDelete}
+          title="Delete Message"
+          message="Are you sure you want to delete this message? This action will remove it permanently."
+          confirmText="Delete Message"
+       />
     </div>
   );
 };

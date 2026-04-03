@@ -1,6 +1,18 @@
 import { sequelize, Order, OrderItem, CartItem, Book, Coupon } from '../models/index.js';
 import { sendEmail, generateOrderConfirmationHTML, generateStatusUpdateHTML } from '../utils/emailService.js';
 import { Op } from 'sequelize';
+import Razorpay from 'razorpay';
+import crypto from 'crypto';
+
+const razorpayInstance = () => {
+    if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+        return new Razorpay({
+            key_id: process.env.RAZORPAY_KEY_ID,
+            key_secret: process.env.RAZORPAY_KEY_SECRET,
+        });
+    }
+    return null;
+};
 
 // @desc    Create new order (Transaction-Based Isolation)
 // @route   POST /api/orders
@@ -63,7 +75,7 @@ export const createOrder = async (req, res) => {
       userId: req.user.id,
       totalAmount: calculatedTotal + (Number(shippingPrice) || 0),
       status: 'pending',
-      paymentStatus: paymentMethod === 'COD' ? 'unpaid' : 'paid', // Simulate auto-pay for Card/PayPal
+      paymentStatus: 'unpaid', // Start all as unpaid, verified via Razorpay later
       shippingAddress: JSON.stringify(shippingAddress),
       paymentMethod: paymentMethod || 'COD',
       shippingPrice: Number(shippingPrice) || 0
@@ -119,7 +131,35 @@ export const createOrder = async (req, res) => {
       console.error('[Email Integration Error] Proceeding anyway:', emailError);
     }
 
-    res.status(201).json({ message: 'Order placed successfully', orderId: newOrder.id });
+    let razorpayPayload = null;
+    const rzp = razorpayInstance();
+    
+    if (paymentMethod !== 'COD' && rzp) {
+       try {
+           const rzpOrder = await rzp.orders.create({
+               amount: Math.round(newOrder.totalAmount * 100), 
+               currency: 'INR',
+               receipt: newOrder.id
+           });
+           
+           newOrder.paymentResult = JSON.stringify({ razorpayOrderId: rzpOrder.id });
+           await newOrder.save(); 
+           
+           razorpayPayload = {
+               orderId: rzpOrder.id,
+               amount: rzpOrder.amount,
+               keyId: process.env.RAZORPAY_KEY_ID
+           };
+       } catch (error) {
+           console.error("Razorpay generation failed:", error);
+       }
+    } else if (paymentMethod !== 'COD' && !rzp) {
+       // Graceful fallback for demo if keys are missing
+       newOrder.paymentStatus = 'paid';
+       await newOrder.save();
+    }
+
+    res.status(201).json({ message: 'Order placed successfully', orderId: newOrder.id, razorpayPayload });
 
   } catch (error) {
     if(!t.finished) await t.rollback();
@@ -297,3 +337,49 @@ export const getAdminStats = async (req, res) => {
     res.status(500).json({ message: 'Server Error fetching stats' });
   }
 };
+
+// @desc    Verify Razorpay payment
+// @route   POST /api/orders/verify-payment
+// @access  Private
+export const verifyPayment = async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, orderId } = req.body;
+    
+    const order = await Order.findByPk(orderId);
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+    
+    const secret = process.env.RAZORPAY_KEY_SECRET;
+    if (!secret) return res.status(500).json({ message: 'Server configuration missing Razorpay secret' });
+
+    const expectedSignature = crypto
+      .createHmac('sha256', secret)
+      .update(razorpay_order_id + "|" + razorpay_payment_id)
+      .digest('hex');
+
+    if (expectedSignature !== razorpay_signature) {
+       return res.status(400).json({ message: 'Payment verification signature invalid' });
+    }
+
+    order.paymentStatus = 'paid';
+    
+    let result = {};
+    if (order.paymentResult) {
+      try { result = JSON.parse(order.paymentResult); } catch(e){}
+    }
+    result.razorpayPaymentId = razorpay_payment_id;
+    result.razorpaySignature = razorpay_signature;
+    
+    order.paymentResult = JSON.stringify(result);
+    // Automatically transition payment-cleared orders
+    if (order.status === 'pending') {
+      order.status = 'processing';
+    }
+    await order.save();
+    
+    res.json({ message: 'Payment verified successfully', order });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error during payment verification' });
+  }
+};
+

@@ -1,4 +1,5 @@
 import { Banner } from '../models/index.js';
+import path from 'path';
 
 export const getBanners = async (req, res) => {
   try {
@@ -16,11 +17,15 @@ export const getBanners = async (req, res) => {
 
 export const createBanner = async (req, res) => {
   try {
-    const { title, link_url, is_active } = req.body;
+    const { title, subtitle, link_url, color, btnColor, is_active } = req.body;
     let image_url = '';
     
     if (req.file) {
-      image_url = req.file.path; // Cloudinary
+      if (req.file.path.startsWith('http')) {
+        image_url = req.file.path; // Cloudinary
+      } else {
+        image_url = '/covers/' + path.basename(req.file.path); // Local
+      }
     } else if (req.body.image_url) {
       image_url = req.body.image_url;
     }
@@ -29,7 +34,15 @@ export const createBanner = async (req, res) => {
        return res.status(400).json({ message: 'Banner image is required' });
     }
 
-    const banner = await Banner.create({ title, image_url, link_url, is_active });
+    const banner = await Banner.create({ 
+      title, 
+      subtitle, 
+      image_url, 
+      link_url, 
+      color, 
+      btnColor, 
+      is_active 
+    });
     res.status(201).json(banner);
   } catch (error) {
     res.status(500).json({ message: 'Server Error' });
@@ -41,16 +54,20 @@ export const updateBanner = async (req, res) => {
     const banner = await Banner.findByPk(req.params.id);
     if (!banner) return res.status(404).json({ message: 'Banner not found' });
     
-    let { title, link_url, is_active } = req.body;
+    let { title, subtitle, link_url, color, btnColor, is_active } = req.body;
     let image_url = banner.image_url;
     
     if (req.file) {
-      image_url = req.file.path;
+      if (req.file.path.startsWith('http')) {
+        image_url = req.file.path; // Cloudinary
+      } else {
+        image_url = '/covers/' + path.basename(req.file.path); // Local
+      }
     } else if (req.body.image_url !== undefined) {
       image_url = req.body.image_url;
     }
 
-    await banner.update({ title, image_url, link_url, is_active });
+    await banner.update({ title, subtitle, image_url, link_url, color, btnColor, is_active });
     res.json(banner);
   } catch (error) {
     res.status(500).json({ message: 'Server Error' });
@@ -61,6 +78,11 @@ export const deleteBanner = async (req, res) => {
   try {
     const banner = await Banner.findByPk(req.params.id);
     if (!banner) return res.status(404).json({ message: 'Banner not found' });
+    
+    if (banner.is_system) {
+        return res.status(403).json({ message: 'System banners cannot be deleted' });
+    }
+
     await banner.destroy();
     res.json({ message: 'Banner deleted successfully' });
   } catch (error) {

@@ -14,6 +14,16 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 const Checkout = () => {
   const { cartItems, cartTotal, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
@@ -31,9 +41,12 @@ const Checkout = () => {
   });
 
   const [paymentMethod, setPaymentMethod] = useState('Card');
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
 
   const shippingPrice = cartTotal > 1000 ? 0 : 150;
-  const finalTotal = cartTotal + shippingPrice;
+  const finalTotal = Math.max(0, cartTotal - discountAmount) + shippingPrice;
 
   if (cartItems.length === 0) {
     navigate('/cart');
@@ -45,6 +58,24 @@ const Checkout = () => {
     setAddressData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleApplyCoupon = async () => {
+    if (!couponCode) return;
+    setLoading(true);
+    try {
+      const { data } = await api.post('/coupons/validate', { code: couponCode });
+      setAppliedCoupon(data);
+      const discount = cartTotal * (data.discount_percentage / 100);
+      setDiscountAmount(discount);
+      toast.success(`Coupon Applied! Saved ₹${discount.toFixed(0)}`);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Invalid coupon code');
+      setAppliedCoupon(null);
+      setDiscountAmount(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePlaceOrder = async () => {
     setLoading(true);
     try {
@@ -52,16 +83,64 @@ const Checkout = () => {
         shippingAddress: addressData,
         paymentMethod,
         shippingPrice,
+        couponCode: appliedCoupon?.code || null
       };
       
       const { data } = await api.post('/orders', orderPayload);
-      // Navigate BEFORE clearing cart to prevent "empty cart" redirect in this component
-      navigate(`/order-success?id=${data.orderId}`);
-      clearCart();
-      toast.success('Success! Your books are on the way.');
+
+      // Handle Razorpay Logic if API returns Razorpay Payload
+      if (data.razorpayPayload) {
+        const isScriptLoaded = await loadRazorpayScript();
+        if (!isScriptLoaded) {
+          throw new Error('Payment gateway failed to load. Please check your connection.');
+        }
+
+        const options = {
+          key: data.razorpayPayload.keyId,
+          amount: data.razorpayPayload.amount,
+          currency: 'INR',
+          name: 'BookHaven',
+          description: 'Payment for your books',
+          order_id: data.razorpayPayload.orderId,
+          handler: async function (response) {
+            try {
+              toast.loading('Verifying payment...', { id: 'verifyPayment' });
+              await api.post('/orders/verify-payment', {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                orderId: data.orderId
+              });
+              toast.success('Payment Verification Success!', { id: 'verifyPayment' });
+              
+              navigate(`/order-success?id=${data.orderId}`);
+              clearCart();
+            } catch (vErr) {
+              toast.error(vErr.response?.data?.message || 'Verification failed. Contact support.', { id: 'verifyPayment' });
+            }
+          },
+          prefill: {
+            name: addressData.fullName,
+            contact: addressData.phone,
+          },
+          theme: { color: '#0ea5e9' } // Primary-500
+        };
+
+        const rzp1 = new window.Razorpay(options);
+        rzp1.on('payment.failed', function (response) {
+          toast.error(`Payment failed: ${response.error.description}`);
+        });
+        rzp1.open();
+        setLoading(false); // Enable buttons immediately while modal is up
+
+      } else {
+        // Direct Flow (COD or fake Card fallback if keys missing)
+        navigate(`/order-success?id=${data.orderId}`);
+        clearCart();
+        toast.success('Success! Your books are on the way.');
+      }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Transaction failed. Please try again.');
-    } finally {
+      toast.error(err.response?.data?.message || err.message || 'Transaction failed. Please try again.');
       setLoading(false);
     }
   };
@@ -308,12 +387,46 @@ const Checkout = () => {
                 <span className="text-gray-400 font-medium">Order Subtotal</span>
                 <span className="font-bold text-gray-800">₹{cartTotal.toFixed(2)}</span>
               </div>
+              
+              {appliedCoupon && (
+                <div className="flex justify-between text-sm text-emerald-600">
+                  <span className="font-medium flex items-center gap-1">
+                    Coupon ({appliedCoupon.code})
+                    <button onClick={() => { setAppliedCoupon(null); setDiscountAmount(0); setCouponCode(''); }} className="text-red-400 hover:text-red-600 ml-1">×</button>
+                  </span>
+                  <span className="font-bold">- ₹{discountAmount.toFixed(2)}</span>
+                </div>
+              )}
+
               <div className="flex justify-between text-sm">
                 <span className="text-gray-400 font-medium">Shipping Fee</span>
                 <span className={`font-bold ${shippingPrice === 0 ? 'text-emerald-500' : 'text-gray-800'}`}>
                   {shippingPrice === 0 ? 'FREE' : `₹${shippingPrice.toFixed(2)}`}
                 </span>
               </div>
+              
+              {/* Coupon Input */}
+              {!appliedCoupon && (
+                <div className="pt-4 pb-2">
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      value={couponCode} 
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      placeholder="Promo Code"
+                      className="flex-grow bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-primary-500 uppercase tracking-widest"
+                    />
+                    <button 
+                      onClick={handleApplyCoupon}
+                      disabled={loading || !couponCode}
+                      className="bg-gray-900 text-white text-[10px] font-bold px-4 rounded-lg hover:bg-black disabled:opacity-50 transition-all uppercase tracking-tighter"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-between text-xl font-black text-gray-900 pt-6 mt-6 border-t-2 border-dashed border-gray-100">
                 <span>Payable Total</span>
                 <span className="text-primary-600">₹{finalTotal.toFixed(2)}</span>

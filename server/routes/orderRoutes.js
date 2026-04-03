@@ -1,5 +1,5 @@
 import express from 'express';
-import { createOrder, getMyOrders, getOrders, updateOrderStatus, getAdminStats } from '../controllers/orderController.js';
+import { createOrder, getMyOrders, getOrders, updateOrderStatus, getAdminStats, verifyPayment } from '../controllers/orderController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 import { validate } from '../middleware/validateMiddleware.js';
 import { orderSchema } from '../utils/validationSchemas.js';
@@ -12,6 +12,8 @@ router.route('/')
 
 router.get('/myorders', protect, getMyOrders);
 router.get('/stats', protect, admin, getAdminStats);
+
+router.post('/verify-payment', protect, verifyPayment);
 
 router.put('/:id/status', protect, admin, updateOrderStatus);
 

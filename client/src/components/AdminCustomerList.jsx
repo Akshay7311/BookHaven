@@ -3,12 +3,15 @@ import { Shield, ShieldAlert, Trash2, Pencil } from 'lucide-react';
 import api from '../services/api';
 import LoadingSpinner from './LoadingSpinner';
 import AdminEditCustomerModal from './AdminEditCustomerModal';
+import ConfirmModal from './ConfirmModal';
 
 const AdminCustomerList = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
 
   const fetchUsers = async () => {
     try {
@@ -31,14 +34,18 @@ const AdminCustomerList = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleDeleteUser = async (userId) => {
-    if (window.confirm('WARNING: Deleting a user will gracefully remove their access. Confirm?')) {
-      try {
-        await api.delete(`/users/${userId}`);
-        fetchUsers();
-      } catch (error) {
-        alert('Failed to delete user');
-      }
+  const handleDeleteUser = (userId) => {
+    setDeleteId(userId);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    try {
+      await api.delete(`/users/${deleteId}`);
+      fetchUsers();
+    } catch (error) {
+      alert('Failed to delete user');
     }
   };
 
@@ -52,6 +59,14 @@ const AdminCustomerList = () => {
         isOpen={isEditModalOpen} 
         onClose={() => setIsEditModalOpen(false)} 
         onSaveSuccess={fetchUsers} 
+      />
+      <ConfirmModal 
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete User Account"
+        message="Are you sure you want to delete this user? This will permanently remove their access to the platform."
+        confirmText="Delete User"
       />
 
       <div className="overflow-x-auto">

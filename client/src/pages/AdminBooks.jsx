@@ -3,6 +3,7 @@ import { Pencil, Trash2, BookOpen } from 'lucide-react';
 import api from '../services/api';
 import AdminAddBook from '../components/AdminAddBook';
 import AdminEditBookModal from '../components/AdminEditBookModal';
+import ConfirmModal from '../components/ConfirmModal';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const AdminDashboard = () => {
@@ -10,6 +11,8 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [editingBook, setEditingBook] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [bookToDelete, setBookToDelete] = useState(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -28,14 +31,18 @@ const AdminDashboard = () => {
   }, []);
 
   const handleDeleteBook = async (bookId) => {
-    if (window.confirm('Are you sure you want to delete this book?')) {
-      try {
-        await api.delete(`/books/${bookId}`);
-        fetchData();
-      } catch (error) {
-        alert('Failed to delete book');
-      }
-    }
+    setBookToDelete(bookId);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+     if (!bookToDelete) return;
+     try {
+       await api.delete(`/books/${bookToDelete}`);
+       fetchData();
+     } catch (error) {
+       alert('Failed to delete book');
+     }
   };
 
   const handleEditClick = (book) => {
@@ -55,6 +62,14 @@ const AdminDashboard = () => {
           isOpen={isEditModalOpen} 
           onClose={() => setIsEditModalOpen(false)} 
           onSaveSuccess={fetchData} 
+      />
+      <ConfirmModal 
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={confirmDelete}
+          title="Delete Book"
+          message="Are you sure you want to delete this book? This action cannot be undone."
+          confirmText="Delete Book"
       />
       {loading ? <LoadingSpinner /> : (
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">

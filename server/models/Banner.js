@@ -11,6 +11,10 @@ const Banner = sequelize.define('Banner', {
     type: DataTypes.STRING,
     allowNull: false
   },
+  subtitle: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   image_url: {
     type: DataTypes.STRING,
     allowNull: false
@@ -19,9 +23,21 @@ const Banner = sequelize.define('Banner', {
     type: DataTypes.STRING,
     allowNull: true
   },
+  color: {
+    type: DataTypes.STRING,
+    defaultValue: 'bg-blue-900'
+  },
+  btnColor: {
+    type: DataTypes.STRING,
+    defaultValue: 'bg-primary-600 hover:bg-primary-700'
+  },
   is_active: {
     type: DataTypes.BOOLEAN,
     defaultValue: true
+  },
+  is_system: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
   }
 }, {
   tableName: 'banners',

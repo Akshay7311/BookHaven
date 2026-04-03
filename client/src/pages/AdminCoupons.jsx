@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Pencil, Trash2, Plus, Ticket } from 'lucide-react';
 import api from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
+import ConfirmModal from '../components/ConfirmModal';
 
 const AdminCoupons = () => {
   const [coupons, setCoupons] = useState([]);
@@ -9,6 +10,8 @@ const AdminCoupons = () => {
   const [formData, setFormData] = useState({ code: '', discount_percentage: '', expiry_date: '', is_active: true });
   const [editingId, setEditingId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
 
   const fetchCoupons = async () => {
     try {
@@ -54,14 +57,18 @@ const AdminCoupons = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Delete coupon completely?')) {
-      try {
-        await api.delete(`/coupons/${id}`);
-        fetchCoupons();
-      } catch (error) {
-        alert('Error deleting');
-      }
+  const handleDelete = (id) => {
+    setDeleteId(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    try {
+      await api.delete(`/coupons/${deleteId}`);
+      fetchCoupons();
+    } catch (error) {
+      alert('Error deleting');
     }
   };
 
@@ -140,6 +147,15 @@ const AdminCoupons = () => {
            </div>
         </div>
       )}
+
+      <ConfirmModal 
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={confirmDelete}
+          title="Delete Coupon"
+          message="Are you sure you want to delete this coupon? This action cannot be undone."
+          confirmText="Delete Coupon"
+       />
     </div>
   );
 };
