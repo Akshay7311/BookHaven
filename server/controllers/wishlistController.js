@@ -8,7 +8,20 @@ export const getUserWishlist = async (req, res) => {
     });
     
     // Map to array of books for easy frontend rendering
-    const books = wishlist.map(item => item.Book).filter(b => b && !b.isDeleted);
+    const books = wishlist.map(item => {
+      const b = item.Book;
+      if (!b || b.isDeleted) return null;
+      return {
+        id: b.id,
+        title: b.title,
+        author: b.author,
+        description: b.description,
+        price: b.price,
+        image_url: b.coverImageUrl, // Map coverImageUrl to image_url
+        stock: b.stock,
+        categoryId: b.categoryId
+      };
+    }).filter(b => b !== null);
     res.json(books);
   } catch (error) {
     res.status(500).json({ message: 'Server Error', error });
