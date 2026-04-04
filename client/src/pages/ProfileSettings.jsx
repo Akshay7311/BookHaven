@@ -8,6 +8,7 @@ const ProfileSettings = () => {
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
+    phone: user?.phone || '',
     currentPassword: '',
     newPassword: '',
   });
@@ -90,6 +91,28 @@ const ProfileSettings = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
                     <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed" readOnly />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+                    <div className="flex gap-2">
+                        <input type="text" name="phone" value={formData.phone} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500" placeholder="Not set" />
+                        <button 
+                            onClick={async () => {
+                                try {
+                                    await api.put(`/users/${user._id || user.id}`, { phone: formData.phone });
+                                    const updatedUser = { ...user, phone: formData.phone };
+                                    localStorage.setItem('user', JSON.stringify(updatedUser));
+                                    alert('Contact number updated!');
+                                    window.location.reload();
+                                } catch (err) {
+                                    alert('Failed to update contact number');
+                                }
+                            }}
+                            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors"
+                        >
+                            Update
+                        </button>
+                    </div>
                   </div>
               </div>
           </div>

@@ -6,6 +6,7 @@ import { BookOpen } from 'lucide-react';
 const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -30,7 +31,7 @@ const Register = () => {
     setIsLoading(true);
     
     try {
-      await register(name, email, password);
+      await register(name, email, password, phone);
       navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to register');
@@ -83,6 +84,16 @@ const Register = () => {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
+              <input
+                type="text"
+                className="input-field"
+                placeholder="+1 234 567 890"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
               />
             </div>
             <div>

@@ -2,11 +2,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 import { ShoppingCart, User, LogOut, BookOpen, Search, Heart, Menu, X, ChevronDown } from 'lucide-react';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const { cartCount } = useCart();
+  const { wishlistCount } = useWishlist();
   const navigate = useNavigate();
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchCategory, setSearchCategory] = useState('');
@@ -121,7 +123,7 @@ const Navbar = () => {
                 <Link to={user ? "/profile/wishlist" : "/login"} className="relative hover:text-gray-300 transition-colors p-2 rounded-md hover:bg-white/10 hidden sm:block delay-100">
                    <div className="flex flex-col items-center">
                     <Heart className="h-6 w-6" />
-                    <span className="text-[10px] font-bold absolute bottom-0 right-0 bg-red-500 text-white rounded-full px-1.5 translate-x-1/4 translate-y-1/4">0</span>
+                    <span className="text-[10px] font-bold absolute bottom-0 right-0 bg-red-500 text-white rounded-full px-1.5 translate-x-1/4 translate-y-1/4">{wishlistCount}</span>
                    </div>
                 </Link>
 

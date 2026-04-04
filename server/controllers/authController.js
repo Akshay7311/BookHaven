@@ -5,12 +5,7 @@ import { sendEmail } from '../utils/emailService.js';
 
 export const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-
-    // Restriction: Only allow the Ethereal account to register (per user request)
-    if (email !== process.env.MAIL_USER && email !== 'admin@bookhaven.com' && email !== 'owner@bookhaven.com') {
-      return res.status(401).json({ message: 'Registration is restricted for this store.' });
-    }
+    const { name, email, password, phone } = req.body;
 
     const userExists = await User.findOne({ where: { email } });
     if (userExists) {
@@ -28,7 +23,8 @@ export const registerUser = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role
+      role,
+      phone
     });
 
     // Send Welcome Email

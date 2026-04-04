@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ShoppingCart, Heart } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useWishlist } from '../context/WishlistContext';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import api from '../services/api';
@@ -10,8 +11,9 @@ import { notify } from '../utils/toastUtil';
 const BookCard = ({ book }) => {
   const { addToCart } = useCart();
   const { user } = useAuth();
+  const { wishlistCount, toggleWishlist, isInWishlist } = useWishlist();
   const navigate = useNavigate();
-  const [inWishlist, setInWishlist] = useState(book?.isWishlisted || false);
+  const inWishlist = isInWishlist(book.id);
 
   if (!book) return null;
 
@@ -39,14 +41,7 @@ const BookCard = ({ book }) => {
       navigate('/login');
       return;
     }
-    try {
-      setInWishlist(!inWishlist); // Optimistic UI
-      await api.post('/wishlist/toggle', { bookId: book.id });
-    } catch (error) {
-       console.error(error);
-       setInWishlist(inWishlist); // Revert on fail
-       notify.error('Failed to update wishlist');
-    }
+    await toggleWishlist(book.id);
   };
 
   const handleCardClick = () => {

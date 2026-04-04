@@ -90,11 +90,6 @@ const Login = () => {
               {isLoading ? 'Signing in...' : 'Sign in'}
             </button>
           </div>
-          
-          {/* Admin Demo Info */}
-          <div className="mt-4 text-center text-xs text-gray-500 bg-gray-50 p-3 rounded">
-            <strong>Demo Admin:</strong> First registered user automatically becomes Admin.<br/>
-          </div>
         </form>
       </div>
     </div>

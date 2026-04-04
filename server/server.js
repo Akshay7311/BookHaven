@@ -111,6 +111,16 @@ const syncDb = async () => {
     }
 }
 
+// Global process handlers to prevent crashes
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception thrown:', err);
+    // Ideally, perform a graceful shutdown if this is critical, but keep it running for dev
+});
+
 app.listen(PORT, async () => {
   await syncDb();
   console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);

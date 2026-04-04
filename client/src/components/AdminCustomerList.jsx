@@ -3,13 +3,16 @@ import { Shield, ShieldAlert, Trash2, Pencil } from 'lucide-react';
 import api from '../services/api';
 import LoadingSpinner from './LoadingSpinner';
 import AdminEditCustomerModal from './AdminEditCustomerModal';
+import AdminAddCustomerModal from './AdminAddCustomerModal';
 import ConfirmModal from './ConfirmModal';
+import { UserPlus } from 'lucide-react';
 
 const AdminCustomerList = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
 
@@ -53,7 +56,23 @@ const AdminCustomerList = () => {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-6">
+      <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+        <h2 className="text-lg font-bold text-gray-800">Customer Directory</h2>
+        <button 
+          onClick={() => setIsAddModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-semibold hover:bg-primary-700 transition-all shadow-sm active:scale-95"
+        >
+          <UserPlus size={16} />
+          Add New User
+        </button>
+      </div>
       
+      <AdminAddCustomerModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSaveSuccess={fetchUsers}
+      />
+
       <AdminEditCustomerModal 
         user={editingUser} 
         isOpen={isEditModalOpen} 
