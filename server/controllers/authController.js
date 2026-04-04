@@ -51,6 +51,7 @@ export const registerUser = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      phone: user.phone,
       token: jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '30d' }),
     });
   } catch (error) {
@@ -70,6 +71,7 @@ export const loginUser = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        phone: user.phone,
         token: jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '30d' }),
       });
     } else {
@@ -84,14 +86,15 @@ export const loginUser = async (req, res) => {
 export const getMe = async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, {
-        attributes: ['id', 'name', 'email', 'role']
+        attributes: ['id', 'name', 'email', 'role', 'phone']
     });
     if(user) {
         res.json({
             _id: user.id,
             name: user.name,
             email: user.email,
-            role: user.role
+            role: user.role,
+            phone: user.phone
         });
     } else {
         res.status(404).json({ message: 'User not found' });
